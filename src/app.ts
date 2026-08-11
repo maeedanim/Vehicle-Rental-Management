@@ -1,9 +1,10 @@
 import express, { type Express, type Request, type Response } from 'express';
+import authRoutes from './routes/auth.routes.js';
 
 const app: Express = express();
 
 app.use(express.json());
-
+app.use('/auth', authRoutes);
 app.get('/health', (_req: Request, res: Response): void => {
   res.status(200).json({
     success: true,
