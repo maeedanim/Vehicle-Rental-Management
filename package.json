@@ -22,20 +22,23 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/maeedanim/Vehicle-Rental-Management/issues"
   },
   "homepage": "https://github.com/maeedanim/Vehicle-Rental-Management#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "knex": "^3.3.0",
     "pg": "^8.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.2.0",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
