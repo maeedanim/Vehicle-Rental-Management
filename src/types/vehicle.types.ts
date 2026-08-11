@@ -25,8 +25,8 @@ export interface UpdateVehicleRequest {
 }
 
 export interface VehicleListQuery {
-  page: number;
-  limit: number;
+  page?: number;
+  limit?: number;
   category?: string;
   search?: string;
 }

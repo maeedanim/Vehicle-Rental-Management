@@ -1,31 +1,47 @@
 import type {
   CreateVehicleRequest,
+  UpdateVehicleRequest,
   Vehicle,
   VehicleListQuery,
   VehicleListResponse,
-  UpdateVehicleRequest,
 } from '../types/vehicle.types.js';
+
 import { VehicleRepository } from '../repositories/vehicle.repository.js';
 
 export class VehicleService {
-  constructor(
-    private readonly vehicleRepository: VehicleRepository = new VehicleRepository(),
-  ) {}
+  private readonly vehicleRepository: VehicleRepository;
 
-  async getVehicles(query: VehicleListQuery): Promise<VehicleListResponse> {
-    const { vehicles, totalItems } =
-      await this.vehicleRepository.findAll(query);
+  constructor(vehicleRepository = new VehicleRepository()) {
+    this.vehicleRepository = vehicleRepository;
+  }
 
-    const totalPages =
-      totalItems === 0 ? 0 : Math.ceil(totalItems / query.limit);
+  async getVehicles(
+    query: VehicleListQuery,
+  ): Promise<VehicleListResponse> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+
+    if (page < 1) {
+      throw new Error('Page must be greater than or equal to 1.');
+    }
+
+    if (limit < 1 || limit > 100) {
+      throw new Error('Limit must be between 1 and 100.');
+    }
+
+    const result = await this.vehicleRepository.findAll({
+      ...query,
+      page,
+      limit,
+    });
 
     return {
-      vehicles,
+      vehicles: result.vehicles,
       pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems,
-        totalPages,
+        page,
+        limit,
+        totalItems: result.totalItems,
+        totalPages: Math.ceil(result.totalItems / limit),
       },
     };
   }
@@ -34,7 +50,7 @@ export class VehicleService {
     const vehicle = await this.vehicleRepository.findById(id);
 
     if (!vehicle) {
-      throw new Error('Vehicle not found');
+      throw new Error('Vehicle not found.');
     }
 
     return vehicle;
@@ -44,13 +60,6 @@ export class VehicleService {
     data: CreateVehicleRequest,
     photoPath: string | null,
   ): Promise<Vehicle> {
-    const existingVehicle =
-      await this.vehicleRepository.findByPlateNumber(data.plateNumber);
-
-    if (existingVehicle) {
-      throw new Error('A vehicle with this plate number already exists');
-    }
-
     return this.vehicleRepository.create(data, photoPath);
   }
 
@@ -59,45 +68,32 @@ export class VehicleService {
     data: UpdateVehicleRequest,
     photoPath?: string,
   ): Promise<Vehicle> {
-    const existingVehicle = await this.vehicleRepository.findById(id);
+    const existingVehicle =
+      await this.vehicleRepository.findById(id);
 
     if (!existingVehicle) {
-      throw new Error('Vehicle not found');
+      throw new Error('Vehicle not found.');
     }
 
-    if (data.plateNumber !== undefined) {
-      const vehicleWithSamePlate =
-        await this.vehicleRepository.findByPlateNumber(data.plateNumber, id);
-
-      if (vehicleWithSamePlate) {
-        throw new Error('A vehicle with this plate number already exists');
-      }
-    }
-
-    const updatedVehicle = await this.vehicleRepository.update(
+    const vehicle = await this.vehicleRepository.update(
       id,
       data,
       photoPath,
     );
 
-    if (!updatedVehicle) {
-      throw new Error('Vehicle not found');
+    if (!vehicle) {
+      throw new Error('Vehicle not found.');
     }
 
-    return updatedVehicle;
+    return vehicle;
   }
 
   async deleteVehicle(id: number): Promise<void> {
-    const vehicle = await this.vehicleRepository.findById(id);
-
-    if (!vehicle) {
-      throw new Error('Vehicle not found');
-    }
-
-    const deleted = await this.vehicleRepository.softDelete(id);
+    const deleted =
+      await this.vehicleRepository.softDelete(id);
 
     if (!deleted) {
-      throw new Error('Vehicle could not be deleted');
+      throw new Error('Vehicle not found.');
     }
   }
 }

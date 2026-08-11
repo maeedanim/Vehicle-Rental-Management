@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
 import { VehicleService } from '../services/vehicle.service.js';
 import type {
@@ -7,95 +7,167 @@ import type {
 } from '../types/vehicle.types.js';
 
 export class VehicleController {
-  constructor(
-    private readonly vehicleService: VehicleService = new VehicleService(),
-  ) {}
+  private readonly vehicleService: VehicleService;
 
-  getVehicles = async (req: Request, res: Response): Promise<void> => {
-    const page = Number(req.query.page);
-    const limit = Number(req.query.limit);
+  constructor(vehicleService = new VehicleService()) {
+    this.vehicleService = vehicleService;
+  }
 
-    const query = {
-      page: Number.isNaN(page) ? 1 : page,
-      limit: Number.isNaN(limit) ? 10 : limit,
-      category:
+  getVehicles = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const page = req.query.page
+        ? Number(req.query.page)
+        : 1;
+
+      const limit = req.query.limit
+        ? Number(req.query.limit)
+        : 10;
+
+      const category =
         typeof req.query.category === 'string'
           ? req.query.category
-          : undefined,
-      search:
-        typeof req.query.search === 'string' ? req.query.search : undefined,
-    };
+          : undefined;
 
-    const result = await this.vehicleService.getVehicles(query);
+      const search =
+        typeof req.query.search === 'string'
+          ? req.query.search
+          : undefined;
 
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+      const result = await this.vehicleService.getVehicles({
+        page,
+        limit,
+        category,
+        search,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: result.vehicles,
+        pagination: result.pagination,
+      });
+    } catch (error) {
+      next(error);
+    }
   };
 
-  getVehicleById = async (req: Request, res: Response): Promise<void> => {
-    const id = Number(req.params.id);
+  getVehicleById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
 
-    const vehicle = await this.vehicleService.getVehicleById(id);
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid vehicle ID.',
+        });
+        return;
+      }
 
-    res.status(200).json({
-      success: true,
-      data: vehicle,
-    });
+      const vehicle = await this.vehicleService.getVehicleById(id);
+
+      res.status(200).json({
+        success: true,
+        data: vehicle,
+      });
+    } catch (error) {
+      next(error);
+    }
   };
 
-  createVehicle = async (req: Request, res: Response): Promise<void> => {
-    const body = req.body as CreateVehicleRequest;
+  createVehicle = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const body = req.body as CreateVehicleRequest;
 
-    const photoPath = req.file
-      ? `${envUploadPath()}/${req.file.filename}`
-      : null;
+      const photoPath = req.file
+        ? `${process.env.UPLOAD_PATH}/${req.file.filename}`
+        : null;
 
-    const vehicle = await this.vehicleService.createVehicle(
-      body,
-      photoPath,
-    );
+      const vehicle = await this.vehicleService.createVehicle(
+        body,
+        photoPath,
+      );
 
-    res.status(201).json({
-      success: true,
-      data: vehicle,
-    });
+      res.status(201).json({
+        success: true,
+        data: vehicle,
+      });
+    } catch (error) {
+      next(error);
+    }
   };
 
-  updateVehicle = async (req: Request, res: Response): Promise<void> => {
-    const id = Number(req.params.id);
+  updateVehicle = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
 
-    const body = req.body as UpdateVehicleRequest;
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid vehicle ID.',
+        });
+        return;
+      }
 
-    const photoPath = req.file
-      ? `${envUploadPath()}/${req.file.filename}`
-      : undefined;
+      const body = req.body as UpdateVehicleRequest;
 
-    const vehicle = await this.vehicleService.updateVehicle(
-      id,
-      body,
-      photoPath,
-    );
+      const photoPath = req.file
+        ? `${process.env.UPLOAD_PATH}/${req.file.filename}`
+        : undefined;
 
-    res.status(200).json({
-      success: true,
-      data: vehicle,
-    });
+      const vehicle = await this.vehicleService.updateVehicle(
+        id,
+        body,
+        photoPath,
+      );
+
+      res.status(200).json({
+        success: true,
+        data: vehicle,
+      });
+    } catch (error) {
+      next(error);
+    }
   };
 
-  deleteVehicle = async (req: Request, res: Response): Promise<void> => {
-    const id = Number(req.params.id);
+  deleteVehicle = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
 
-    await this.vehicleService.deleteVehicle(id);
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid vehicle ID.',
+        });
+        return;
+      }
 
-    res.status(200).json({
-      success: true,
-      message: 'Vehicle deleted successfully',
-    });
+      await this.vehicleService.deleteVehicle(id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Vehicle deleted successfully.',
+      });
+    } catch (error) {
+      next(error);
+    }
   };
-}
-
-function envUploadPath(): string {
-  return 'uploads';
 }

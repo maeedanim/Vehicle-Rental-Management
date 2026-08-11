@@ -33,7 +33,12 @@ export class VehicleRepository {
   async findAll(
     query: VehicleListQuery,
   ): Promise<{ vehicles: Vehicle[]; totalItems: number }> {
-    const { page, limit, category, search } = query;
+    const {
+      page = 1,
+      limit = 10,
+      category,
+      search,
+    } = query;
 
     const offset = (page - 1) * limit;
 
@@ -56,26 +61,26 @@ export class VehicleRepository {
     const totalItems = Number(countResult[0]?.count ?? 0);
 
     const rows = (await baseQuery
-  .clone()
-  .select(
-    'id',
-    'name',
-    'plate_number',
-    'category',
-    'daily_rate',
-    'photo_path',
-    'deleted_at',
-    'created_at',
-    'updated_at',
-  )
-  .orderBy('id', 'asc')
-  .limit(limit)
-  .offset(offset)) as VehicleDatabaseRow[];
+      .clone()
+      .select(
+        'id',
+        'name',
+        'plate_number',
+        'category',
+        'daily_rate',
+        'photo_path',
+        'deleted_at',
+        'created_at',
+        'updated_at',
+      )
+      .orderBy('id', 'asc')
+      .limit(limit)
+      .offset(offset)) as VehicleDatabaseRow[];
 
-return {
-  vehicles: rows.map((row) => this.mapRowToVehicle(row)),
-  totalItems,
-};
+    return {
+      vehicles: rows.map((row) => this.mapRowToVehicle(row)),
+      totalItems,
+    };
   }
 
   async findById(id: number): Promise<Vehicle | null> {
