@@ -2,14 +2,6 @@
 
 Backend REST API for a vehicle rental management system.
 
-## Development
-
-Install dependencies:
-
-```bash
-npm install
-
-
 ## 1. Tech Stack & Architecture
 
 ### Languages & Frameworks
