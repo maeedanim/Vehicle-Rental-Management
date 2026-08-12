@@ -456,21 +456,21 @@ PostgreSQL stores staff, vehicles, and rental data.
 
 Technology Decisions
 
-Technology	Why it was used
+### Technology	Why it was used
 
-### Node.js	- Provides a lightweight runtime suitable for building REST APIs.
-### TypeScript - Adds static typing, improving reliability and maintainability.
-### Express.js - Simple and flexible HTTP framework for building REST APIs.
-### PostgreSQL - Relational database suited to structured vehicle/rental data and foreign-key relationships.
-### Knex.js - Provides migrations, seeds, transactions, and SQL query building while keeping SQL accessible.
-### Joi - Validates request bodies, query parameters, and route parameters before business logic executes.
-### JWT - Provides stateless authentication for protected API endpoints.
-### bcryptjs - Securely hashes staff passwords rather than storing plaintext passwords.
-### Multer - Handles multipart form-data and local vehicle photo uploads.
-### Helmet - Adds common HTTP security headers to the Express application.
-### Swagger / OpenAPI	Provides interactive API documentation and makes the API easier to test and integrate.
-### ESLint + Prettier	Maintains consistent code quality and formatting.
-### dotenv - Loads database credentials, JWT configuration, ports, and other environment-specific settings securely.
+#### Node.js	- Provides a lightweight runtime suitable for building REST APIs.
+#### TypeScript - Adds static typing, improving reliability and maintainability.
+#### Express.js - Simple and flexible HTTP framework for building REST APIs.
+#### PostgreSQL - Relational database suited to structured vehicle/rental data and foreign-key relationships.
+#### Knex.js - Provides migrations, seeds, transactions, and SQL query building while keeping SQL accessible.
+#### Joi - Validates request bodies, query parameters, and route parameters before business logic executes.
+#### JWT - Provides stateless authentication for protected API endpoints.
+#### bcryptjs - Securely hashes staff passwords rather than storing plaintext passwords.
+#### Multer - Handles multipart form-data and local vehicle photo uploads.
+#### Helmet - Adds common HTTP security headers to the Express application.
+#### Swagger / OpenAPI	Provides interactive API documentation and makes the API easier to test and integrate.
+#### ESLint + Prettier	Maintains consistent code quality and formatting.
+#### dotenv - Loads database credentials, JWT configuration, ports, and other environment-specific settings securely.
 
 
 Key Design Decisions
