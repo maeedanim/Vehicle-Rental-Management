@@ -402,7 +402,7 @@ curl http://localhost:5000/vehicles \
 
 ---
 
-## 8. Notable Patterns, Risks & Unclear Areas
+## 8. Notable Patterns
 
 ### ✅ Good Patterns
 
