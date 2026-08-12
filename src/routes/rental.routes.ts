@@ -24,13 +24,13 @@ router.get('/:id', rentalController.getRentalById);
 
 router.post(
   '/',
-  validate(createRentalSchema),
+  validate(createRentalSchema, 'body'),
   rentalController.createRental,
 );
 
 router.put(
   '/:id',
-  validate(updateRentalSchema),
+  validate(updateRentalSchema, 'body'),
   rentalController.updateRental,
 );
 

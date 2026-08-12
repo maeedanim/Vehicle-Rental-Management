@@ -20,6 +20,16 @@ export interface RentalDatabaseRow {
   updated_at: Date;
 }
 
+export interface RentalReportRow {
+  id: number;
+  name: string;
+  total_bookings: string;
+  days_rented: string;
+  revenue: string;
+}
+
+
+
 export class RentalRepository {
   async findAll(
     query: RentalQueryParams,
@@ -234,4 +244,99 @@ export class RentalRepository {
 
     return rental;
   }
+
+  async getMonthlyRentalReport(
+  month: string,
+  vehicleId?: number,
+): Promise<RentalReportRow[]> {
+  let query = `
+    WITH report_period AS (
+      SELECT
+        TO_DATE(? || '-01', 'YYYY-MM-DD') AS month_start,
+        (
+          TO_DATE(? || '-01', 'YYYY-MM-DD')
+          + INTERVAL '1 month'
+          - INTERVAL '1 day'
+        )::date AS month_end
+    )
+
+    SELECT
+      v.id,
+      v.name,
+
+      COUNT(r.id)::text AS total_bookings,
+
+      COALESCE(
+        SUM(
+          CASE
+            WHEN r.id IS NOT NULL THEN
+              LEAST(r.end_date, rp.month_end)
+              -
+              GREATEST(r.start_date, rp.month_start)
+              + 1
+            ELSE 0
+          END
+        ),
+        0
+      )::text AS days_rented,
+
+      COALESCE(
+        SUM(
+          CASE
+            WHEN r.id IS NOT NULL THEN
+              v.daily_rate *
+              (
+                LEAST(r.end_date, rp.month_end)
+                -
+                GREATEST(r.start_date, rp.month_start)
+                + 1
+              )
+            ELSE 0
+          END
+        ),
+        0
+      )::text AS revenue
+
+    FROM vehicles v
+
+    CROSS JOIN report_period rp
+
+    LEFT JOIN rentals r
+      ON r.vehicle_id = v.id
+
+      AND r.status IN ('booked', 'ongoing', 'completed')
+
+      AND r.start_date <= rp.month_end
+      AND r.end_date >= rp.month_start
+
+    WHERE v.deleted_at IS NULL
+  `;
+
+  const bindings: (string | number)[] = [month, month];
+
+  if (vehicleId !== undefined) {
+    query += `
+      AND v.id = ?
+    `;
+
+    bindings.push(vehicleId);
+  }
+
+  query += `
+    GROUP BY
+      v.id,
+      v.name,
+      v.daily_rate
+
+    ORDER BY
+      revenue DESC,
+      v.id ASC
+  `;
+
+  const result = await database.raw(query, bindings);
+
+  return result.rows as RentalReportRow[];
+}
+
+
 }
