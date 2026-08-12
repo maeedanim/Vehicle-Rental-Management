@@ -416,3 +416,74 @@ curl http://localhost:5000/vehicles \
 - **DB indexes** on rental query patterns (`vehicle_id`, `status`, `start_date`, `end_date`)
 - **upsert seed strategy** for vehicles (`onConflict('plate_number').merge(...)`) — idempotent re-runs
 
+## 9. Architecture & Technology Decisions
+
+This project follows a layered OOP architecture to keep routing, business logic, database access, and infrastructure concerns separated.
+
+Architecture
+
+Client
+  ↓
+Express Routes
+  ↓
+Middleware
+  ├── JWT Authentication
+  ├── Joi Validation
+  └── Multer File Upload
+  ↓
+Controllers
+  ↓
+Services
+  ↓
+Repositories
+  ↓
+Knex
+  ↓
+PostgreSQL
+
+Routes define API endpoints and middleware flow.
+
+Middleware handles authentication, validation, uploads, error handling, and request processing.
+
+Controllers handle HTTP requests/responses and delegate business operations.
+
+Services contain the application's business logic, such as rental availability and server-side price calculation.
+
+Repositories isolate database queries from the business layer.
+
+PostgreSQL stores staff, vehicles, and rental data.
+
+
+Technology Decisions
+
+Technology	Why it was used
+
+Node.js	Provides a lightweight runtime suitable for building REST APIs.
+TypeScript	Adds static typing, improving reliability and maintainability.
+Express.js	Simple and flexible HTTP framework for building REST APIs.
+PostgreSQL	Relational database suited to structured vehicle/rental data and foreign-key relationships.
+Knex.js	Provides migrations, seeds, transactions, and SQL query building while keeping SQL accessible.
+Joi	Validates request bodies, query parameters, and route parameters before business logic executes.
+JWT	Provides stateless authentication for protected API endpoints.
+bcryptjs	Securely hashes staff passwords rather than storing plaintext passwords.
+Multer	Handles multipart form-data and local vehicle photo uploads.
+Helmet	Adds common HTTP security headers to the Express application.
+Swagger / OpenAPI	Provides interactive API documentation and makes the API easier to test and integrate.
+ESLint + Prettier	Maintains consistent code quality and formatting.
+dotenv	Loads database credentials, JWT configuration, ports, and other environment-specific settings securely.
+
+
+Key Design Decisions
+
+Business logic is kept out of route handlers. Controllers delegate operations to services, while repositories handle database access. This makes the application easier to test, maintain, and extend.
+
+Rental availability is checked in application logic. PostgreSQL enforces the vehicle_id foreign key, while the service layer checks whether an active rental overlaps the requested dates. This follows the project requirement that overlapping active rentals must be rejected. 
+
+Rental totals are calculated server-side. Clients provide the vehicle and rental dates, while the backend calculates daily_rate × number of rental days, preventing clients from manipulating the rental price. 
+
+Soft deletion is used for vehicles. Instead of physically removing vehicles, the deleted_at field preserves historical data while allowing the application to exclude deleted vehicles from normal operations. 
+
+Database migrations and seeds make the database reproducible and provide predictable development/test data. The seed data also includes a rental crossing a month boundary so the monthly reporting logic can be verified. 
+
+This architecture gives the project a clear separation of concerns while remaining appropriately lightweight for a small REST API.
+
