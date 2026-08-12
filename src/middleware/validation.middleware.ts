@@ -1,16 +1,23 @@
-import type { NextFunction, Request, Response } from 'express';
-import type Joi from 'joi';
+import type {
+  NextFunction,
+  Request,
+  Response,
+} from 'express';
+import type { ObjectSchema } from 'joi';
 
-export type ValidationTarget = 'body' | 'params' | 'query';
+type ValidationSource = 'body' | 'query' | 'params';
 
 export function validate(
-  schema: Joi.ObjectSchema,
-  target: ValidationTarget,
+  schema: ObjectSchema,
+  source: ValidationSource,
 ) {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const { error, value } = schema.validate(req[target], {
+  return (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): void => {
+    const { error, value } = schema.validate(req[source], {
       abortEarly: false,
-      allowUnknown: false,
       stripUnknown: true,
     });
 
@@ -20,16 +27,12 @@ export function validate(
         message: 'Validation failed',
         errors: error.details.map((detail) => detail.message),
       });
+
       return;
     }
 
-    if (target === 'query') {
-      res.locals.validatedQuery = value;
-    } else if (target === 'body') {
-      req.body = value;
-    } else if (target === 'params') {
-      req.params = value;
-    }
+    res.locals.validated = res.locals.validated ?? {};
+    res.locals.validated[source] = value;
 
     next();
   };

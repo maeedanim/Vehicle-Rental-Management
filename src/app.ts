@@ -3,15 +3,22 @@ import authRoutes from './routes/auth.routes.js';
 import vehicleRoutes from './routes/vehicle.routes.js';
 import rentalRoutes from './routes/rental.routes.js';
 import reportRoutes from './routes/report.routes.js';
+import helmet from 'helmet';
+import { errorMiddleware } from './middleware/error.middleware.js';
+import {notFoundMiddleware} from './middleware/not-found.middleware.js';
 
 
 const app: Express = express();
 
+app.use(express.urlencoded({ extended: true }));
+app.use(helmet());
 app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/vehicles', vehicleRoutes);
 app.use('/rentals', rentalRoutes);
 app.use('/reports', reportRoutes);
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 app.get('/health', (_req: Request, res: Response): void => {
   res.status(200).json({

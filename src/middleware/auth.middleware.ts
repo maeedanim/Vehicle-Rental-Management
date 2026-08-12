@@ -1,17 +1,22 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-import jwtConfig from '../config/jwt.js';
+import env from '../config/env.js';
 import type { JwtPayload } from '../types/auth.types.js';
 
-function isApplicationJwtPayload(
-  payload: string | jwt.JwtPayload,
-): payload is jwt.JwtPayload {
+function isJwtPayload(
+  decoded: string | jwt.JwtPayload,
+): decoded is jwt.JwtPayload {
+  if (typeof decoded === 'string') {
+    return false;
+  }
+
+  const { sub, email, name } = decoded;
+
   return (
-    typeof payload !== 'string' &&
-    (typeof payload.sub === 'number' || typeof payload.sub === 'string') &&
-    typeof payload.email === 'string' &&
-    typeof payload.name === 'string'
+    (typeof sub === 'number' || typeof sub === 'string') &&
+    typeof email === 'string' &&
+    typeof name === 'string'
   );
 }
 
@@ -41,9 +46,9 @@ export function authMiddleware(
   }
 
   try {
-    const decoded = jwt.verify(token, jwtConfig.secret);
+    const decoded = jwt.verify(token, env.jwt.secret);
 
-    if (!isApplicationJwtPayload(decoded)) {
+    if (!isJwtPayload(decoded)) {
       res.status(401).json({
         success: false,
         message: 'Invalid token payload',
@@ -51,10 +56,7 @@ export function authMiddleware(
       return;
     }
 
-    const userId =
-      typeof decoded.sub === 'number'
-        ? decoded.sub
-        : Number(decoded.sub);
+    const userId = Number(decoded.sub);
 
     if (!Number.isInteger(userId) || userId <= 0) {
       res.status(401).json({
