@@ -422,6 +422,7 @@ This project follows a layered OOP architecture to keep routing, business logic,
 
 Architecture
 
+```text
 Client
   ↓
 Express Routes
@@ -440,6 +441,7 @@ Repositories
 Knex
   ↓
 PostgreSQL
+```
 
 Routes define API endpoints and middleware flow.
 
